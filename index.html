@@ -3,29 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Draggable Circle Buttons</title>
+    <title>Ice Cream Challenge</title>
     <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
+		div {
+			width: 1080px;
+            height: 720px;
+			border: 0px solid #fcc;
+			opacity: 1;
+		}
+        canvas {
+            width: 1080px;
+            height: 720px;
+            background-color: "transparent";
+			border: 0px solid #ccc;
+			opacity: 1;
         }
-        #canvas {
-            width: 600px;
-            height: 400px;
+		table, th, td {
             border: 1px solid #ccc;
-            position: relative;
-            background-color: #fff;
+            padding: 0px;
+            text-align: center;
         }
-        .circle-button {
-            width: 50px;
-            height: 50px;
+		th, td {
+			width: 100px;
+			height: 20px;
+        }
+		.axis_label {
+			width: 40px;
+			height: 40px;
+			border: 0px solid #ccc;
+			background-color: "transparent";
+			position: absolute;
+			display: flex;
+			text-align: center;
+			justify-content: center;
+            align-items: center;
+		}
+		.equation_label {
+			top: 520px;
+			height: 40px;
+			position: absolute; 
+			font-size: 20px;
+		}
+        .cp {
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
             border: 2px solid #333;
-            background-color: #ddd;
+            background-color: #585;
             position: absolute;
             cursor: pointer;
             display: flex;
@@ -33,16 +57,86 @@
             align-items: center;
             user-select: none;
         }
-        .circle-button:active {
-            background-color: #bbb;
+		.dp {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            background-color: #00A2E8;
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
         }
+        .cp:active {
+            background-color: #6b6;
+        }
+		#prediction_label {
+			width: 100px;
+			height: 24px;
+			border-radius: 8px;
+			border: 1px solid #ccc;
+			background-color: #ddd;
+			opacity: 1;
+			position: absolute;
+			display: flex;
+			text-align: center;
+			justify-content: center;
+            align-items: center;
+		}
+		#prediction_pointer {
+			width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            border: 1px solid #000;
+            background-color: #000;
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+		}
     </style>
 </head>
 <body>
-    <div id="canvas">
-        <div class="circle-button" id="button1">1</div>
-        <div class="circle-button" id="button2">2</div>
-    </div>
-    <script defer src="script.js"></script>
+    <div id="main_canvas" style="position: absolute; left: 0; top: 0;">
+		<canvas id="axis_canvas" width="1080" height="720" style="position: absolute; left: 0; top: 0; z-index: -2; width: 1080px; height: 720px"></canvas>
+		<canvas id="grid_canvas" width="1080" height="720" style="position: absolute; left: 0; top: 0; z-index: -3; width: 1080px; height: 720px"></canvas>
+        <canvas id="line_canvas" width="1080" height="720" style="position: absolute; left: 0; top: 0; z-index: -1; width: 1080px; height: 720px"></canvas>
+		<canvas id="error_canvas" width="1080" height="720" style="position: absolute; left: 0; top: 0; z-index: 0; width: 1080px; height: 720px"></canvas>
+		
+		<div class="cp" id="control_point1" style="z-index: 2;"></div>
+		<div class="cp" id="control_point2" style="z-index: 2;"></div>
+    
+	
+		<table id="record" style="position: absolute; left: 800px; top: 70px;">
+			<thead>
+				<tr>
+					<th>Day</th>
+					<th>Temperature</th>
+					<th>Sales (kg)</th>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+		
+	<div class="equation_label" style="left: 40px; width: 220px;"><b>Regression Equation:</b></div>
+	<div class="equation_label" id='equation1' style="left: 260px; width: 60px;">Sales</div>
+	<div class="equation_label" id='equation2' style="left: 320px; width: 30px;">=</div>
+	<b><div class="equation_label" id='slope_sign' style="left: 350px;width: 20px;">&minus;</div></b>
+	<b><div class="equation_label" id='slope_value' style="left: 370px; width: 50px;">0.500</div></b>
+	<div class="equation_label" id='equation3' style="left: 420px; width: 30px;">&times;</div>
+	<div class="equation_label" id='equation4' style="left: 450px; width: 120px;">Temperature</div>
+	<div class="equation_label" id='intercept_sign' style="left: 570px; width: 30px;">&minus;</div>
+	<b><div class="equation_label" id='intercept_value' style="left: 600px; width: 60px;">0</div></b>
+    
+	<div id='prediction_label' style="position: absolute; left: -200px; top: -200px;">(0, 1)</div>
+	<div id="prediction_pointer" style="position: absolute; left: -200px; top: -200px;"></div>
+	
+	</div>
+	
+	<script defer src="script.js"></script>
 </body>
 </html>
