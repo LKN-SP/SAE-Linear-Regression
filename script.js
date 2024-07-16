@@ -17,6 +17,7 @@ const Record = document.getElementById('record')
 const control_point1 = document.getElementById('control_point1')
 const control_point2 = document.getElementById('control_point2')
 
+const equation0 = document.getElementById('equation0')
 const equation1 = document.getElementById('equation1')
 const equation2 = document.getElementById('equation2')
 const slope_sign = document.getElementById('slope_sign')
@@ -25,6 +26,11 @@ const equation3 = document.getElementById('equation3')
 const equation4 = document.getElementById('equation4')
 const intercept_sign = document.getElementById('intercept_sign')
 const intercept_value = document.getElementById('intercept_value')
+
+const equation0_x = 680
+const equation0_y = 0
+const equation1_x = 720
+const equation1_y = 40
 
 const prediction_label = document.getElementById('prediction_label')
 const prediction_pointer = document.getElementById('prediction_pointer')
@@ -76,6 +82,7 @@ var isDragging = false
 document.addEventListener('DOMContentLoaded', () => {
 	initialize_canvas()
 	initialize_axis()
+	initialize_equation_position()
 	initialize_control_points()
 	set_canvas_limit()
 	
@@ -209,6 +216,11 @@ function initialize_axis() {
 	canvas.lineWidth = 1; 
 	canvas.strokeStyle = "#eeeeee"
 	canvas.stroke()
+}
+
+function initialize_equation_position () {
+	equation0.style.left = `${equation0_x}px`;
+	equation0.style.top = `${equation0_y}px`;
 }
 
 function axis_to_canvas(axis_coordinates) {
