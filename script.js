@@ -27,10 +27,28 @@ const equation4 = document.getElementById('equation4')
 const intercept_sign = document.getElementById('intercept_sign')
 const intercept_value = document.getElementById('intercept_value')
 
-const equation0_x = 680
-const equation0_y = 0
-const equation1_x = 720
-const equation1_y = 40
+const instruction_button = document.getElementById('instruction')
+const instruction_close_button = document.getElementById('instruction_close')
+const start_button = document.getElementById('start')
+const reset_button = document.getElementById('reset')
+
+const arrow1 = document.getElementById('arrow1')
+const guiding1 = document.getElementById('guiding1')
+const arrow2 = document.getElementById('arrow2')
+const guiding2 = document.getElementById('guiding2')
+const yhat_input = document.getElementById('yhat_input')
+const input_submit = document.getElementById('input_submit')
+
+const total_revenue_value = document.getElementById('total_revenue_value')
+const total_expense_value = document.getElementById('total_expense_value')
+const total_profit_value = document.getElementById('total_profit_value')
+const total_wastage_value = document.getElementById('total_wastage_value')
+
+const equation0_x = 640
+const equation0_y = 30
+const equation1_x = 660
+const equation1_y = 60
+var equation_next_x
 
 const prediction_label = document.getElementById('prediction_label')
 const prediction_pointer = document.getElementById('prediction_pointer')
@@ -71,31 +89,98 @@ var control_point_anchors = {'control_point1': [0, 0], 'control_point2': [axis_x
 
 var canvas_limit = [0, 0, 0, 0] // Top, Bottom, Left, Right
 
+const max_day = 10
+
 var n_initial_data_points = 5
 var data_points = []
+var predictions = []
+var revenue = []
+var expense = []
 var n_dp_rows = 0
 
-var slope
-var intercept
+var next_day = n_initial_data_points + 1
+var next_y = 0
+var yhat = 0
+var next_revenue = 0
+var next_expense = 0
+
+var total_revenue = 0
+var total_expense = 0
+var total_profit = 0
+var total_wastage = 0
+var slope = 0
+var intercept = 0
 var isDragging = false
+
+var instruction_on = true
+var game_on = false
+var game_end = false
 
 document.addEventListener('DOMContentLoaded', () => {
 	initialize_canvas()
 	initialize_axis()
-	initialize_equation_position()
-	initialize_control_points()
 	set_canvas_limit()
 	
-	initialize_data_points()
+	initialize_game()
 	
-	update_data_points()
-	update_regression_line()
-	update_error()
+	start_button.addEventListener('click', start_game)
+	input_submit.addEventListener('click', submit_input)
+	reset_button.addEventListener('click', initialize_game)
+	
+	instruction_button.addEventListener('click', show_instruction)
+	instruction_close_button.addEventListener('click', show_instruction)
 })
 
 document.addEventListener('mousemove', () => {
 	hover_prediction()
 })
+
+function initialize_game() {
+	n_initial_data_points = 5
+	data_points = []
+	predictions = []
+	revenue = []
+	expense = []
+	n_dp_rows = 0
+
+	next_day = n_initial_data_points + 1
+	next_y = 0
+	yhat = 0
+	next_revenue = 0
+	next_expense = 0
+
+	total_revenue = 0
+	total_expense = 0
+	total_profit = 0
+	total_wastage = 0
+	slope = 0
+	intercept = 0
+	isDragging = false
+
+	game_on = false
+	game_end = false
+	
+	initialize_equation_position()
+	initialize_control_points()
+	initialize_data_points()
+	
+	remove_dp = true
+	
+	while (remove_dp) {
+		data_point_elements = document.getElementsByClassName("dp")
+		if (data_point_elements.length == 0) {
+			remove_dp = false
+		} else {
+			data_point = data_point_elements[0]
+			data_point.remove()
+		}
+	}
+	
+	update_data_points()
+	update_regression_line()
+	
+	reset_button.style.visibility = "hidden"
+}
 
 function initialize_canvas() {
 	MainCanvas.style.left = `${page_margin_left}px`
@@ -177,10 +262,11 @@ function initialize_axis() {
 	
 	new_label = document.createElement('div');
 	new_label.className = 'axis_label';
-	new_label.innerHTML = '<b>Temperature</b>'
+	new_label.innerHTML = '<b>Temperature (&#176C)</b>'
 	
-	x = canvas_width - axis_label_width * 2
+	x = canvas_width / 2 - axis_label_width * 2 + 20
 	y = axis_height + canvas_margin * 1.8
+	new_label.style.width = `140px`;
 	new_label.style.left = `${x}px`;
 	new_label.style.top = `${y}px`;
 	
@@ -204,10 +290,11 @@ function initialize_axis() {
 	
 	new_label = document.createElement('div');
 	new_label.className = 'axis_label';
-	new_label.innerHTML = '<b>Sales</b>'
+	new_label.innerHTML = '<b>Sales (kg)</b>'
 	
-	x = 0
-	y = -10
+	x = -20
+	y = -20
+	new_label.style.width = `120px`;
 	new_label.style.left = `${x}px`;
 	new_label.style.top = `${y}px`;
 	
@@ -221,6 +308,37 @@ function initialize_axis() {
 function initialize_equation_position () {
 	equation0.style.left = `${equation0_x}px`;
 	equation0.style.top = `${equation0_y}px`;
+	
+	equation1.style.left = `${equation1_x}px`;
+	equation1.style.top = `${equation1_y}px`;
+	
+	equation_next_x = equation1_x + 60
+	equation2.style.left = `${equation_next_x}px`;
+	equation2.style.top = `${equation1_y}px`;
+	
+	equation_next_x = equation_next_x + 30
+	slope_sign.style.left = `${equation_next_x}px`;
+	slope_sign.style.top = `${equation1_y}px`;
+	
+	equation_next_x = equation_next_x + 20
+	slope_value.style.left = `${equation_next_x}px`;
+	slope_value.style.top = `${equation1_y}px`;
+	
+	equation_next_x = equation_next_x + 50
+	equation3.style.left = `${equation_next_x}px`;
+	equation3.style.top = `${equation1_y}px`;
+	
+	equation_next_x = equation_next_x + 30
+	equation4.style.left = `${equation_next_x}px`;
+	equation4.style.top = `${equation1_y}px`;
+	
+	equation_next_x = equation_next_x + 120
+	intercept_sign.style.left = `${equation_next_x}px`;
+	intercept_sign.style.top = `${equation1_y}px`;
+	
+	equation_next_x = equation_next_x + 30
+	intercept_value.style.left = `${equation_next_x}px`;
+	intercept_value.style.top = `${equation1_y}px`;
 }
 
 function axis_to_canvas(axis_coordinates) {
@@ -283,17 +401,32 @@ function get_random_error(std) {
 	return num
 }
 
+function generate_data_point() {
+	random_x = Math.floor((15 + Math.random() * 25) * 10) / 10
+	random_y = random_x * actual_slope + actual_intercept
+	random_error = get_random_error(error_std)
+	
+	output = [random_x, Math.floor((random_y + random_error) * 10) / 10]
+	return output
+}
+
 function initialize_data_points() {
 	for (let i = 0; i < n_initial_data_points; i++) {
-		random_x = Math.floor((15 + Math.random() * 25) * 10) / 10
-		random_y = random_x * actual_slope + actual_intercept
-		random_error = get_random_error(error_std)
+		new_data_point = generate_data_point()
 		
-		data_points.push([random_x, Math.floor((random_y + random_error) * 10) / 10])
+		data_points.push(new_data_point)
+		predictions.push("-")
+		revenue.push("-")
+		expense.push("-")
 	}
 }
 
 function update_data_points() {
+	var max_points = 9
+	if (game_end) {
+		var max_points = max_points + 1
+	}
+	
 	for (let i = n_dp_rows; i < data_points.length; i++) {
 		data_point = document.createElement('div');
 		data_point.className = 'dp';
@@ -310,18 +443,43 @@ function update_data_points() {
 		
 		MainCanvas.appendChild(data_point);
 		
-		table = Record.getElementsByTagName('tbody')[0];
+		n_dp_rows = n_dp_rows + 1
+	}
+	
+	table = Record.getElementsByTagName('tbody')[0];
+	table.innerHTML = ""
+	
+	for (let i = Math.max(0, data_points.length - max_points); i < data_points.length; i++) {
+		
 		const newRow = table.insertRow();
 
 		const cell1 = newRow.insertCell(0)
 		const cell2 = newRow.insertCell(1)
 		const cell3 = newRow.insertCell(2)
-
-		cell1.innerHTML = n_dp_rows + 1
-		cell2.innerHTML = data_points[i][0]
-		cell3.innerHTML = data_points[i][1]
+		const cell4 = newRow.insertCell(3)
+		const cell5 = newRow.insertCell(4)
+		const cell6 = newRow.insertCell(5)
 		
-		n_dp_rows = n_dp_rows + 1
+		if ((data_points.length > 9) & (i == data_points.length - max_points)) {
+			cell1.innerHTML = "..."
+			cell2.innerHTML = "..."
+			cell3.innerHTML = "..."
+			cell4.innerHTML = "..."
+			cell5.innerHTML = "..."	
+			cell6.innerHTML = "..."
+		} else {
+			cell1.innerHTML = i + 1
+			cell2.innerHTML = data_points[i][0]
+			cell3.innerHTML = data_points[i][1]
+			cell4.innerHTML = predictions[i]
+			if (revenue[i] == "-") {
+				cell5.innerHTML = revenue[i]
+				cell6.innerHTML = expense[i]
+			} else {
+				cell5.innerHTML = Math.floor(revenue[i] * 100 + 0.5) / 100
+				cell6.innerHTML = Math.floor(expense[i] * 100 + 0.5) / 100
+			}
+		}
 	}
 }
 
@@ -427,7 +585,7 @@ function update_error() {
 
 function drag_update() {
 	update_regression_line()
-	update_error()
+	//update_error()
 }
 
 function hover_prediction() {
@@ -509,6 +667,144 @@ function makeDraggable(element) {
         document.addEventListener('mousemove', onMouseMove)
         document.addEventListener('mouseup', onMouseUp)
     });
+}
+
+function ask_next() {
+	new_data_point = generate_data_point()
+	next_x = new_data_point[0]
+	next_y = new_data_point[1]
+	data_points.push(new_data_point)
+	
+	table = Record.getElementsByTagName('tbody')[0];
+	
+	const newRow = table.insertRow();
+	
+	const cell1 = newRow.insertCell(0)
+	const cell2 = newRow.insertCell(1)
+	const cell3 = newRow.insertCell(2)
+	const cell4 = newRow.insertCell(3)
+	const cell5 = newRow.insertCell(4)
+	const cell6 = newRow.insertCell(5)
+	
+	cell1.innerHTML = next_day
+	cell2.innerHTML = new_data_point[0]
+	cell3.innerHTML = ""
+	cell3.style.backgroundColor = "#C3C3C3"
+	cell4.innerHTML = ""
+	cell5.innerHTML = ""
+	cell5.style.backgroundColor = "#C3C3C3"
+	cell6.innerHTML = ""
+	cell6.style.backgroundColor = "#C3C3C3"
+	
+	guiding_y1 = Record.clientTop + Record.clientHeight + 120
+	guiding_y2 = guiding_y1 + 20
+	guiding_y3 = guiding_y2 + 40
+	
+	arrow1.style.top = `${guiding_y1}px`;
+	guiding1.style.top = `${guiding_y2}px`;
+	arrow2.style.top = `${guiding_y1}px`;
+	guiding2.style.top = `${guiding_y2}px`;
+	yhat_input.style.top = `${guiding_y3}px`;
+	input_submit.style.top = `${guiding_y3}px`;
+}
+
+function submit_input() {
+	yhat = parseFloat(yhat_input.value)
+	
+	if (!isNaN(yhat)) {
+		yhat = Math.floor(yhat * 100 + 0.5) / 100
+		
+		if (yhat < 0) {
+			yhat = 0
+		} else if (yhat > 300) {
+			yhat = 300
+		}
+		new_expense = yhat * 5
+		new_revenue = Math.min(yhat, next_y) * 10
+		
+		total_expense = Math.floor((total_expense + new_expense) * 100 + 0.5) / 100
+		total_revenue = Math.floor((total_revenue + new_revenue) * 100 + 0.5) / 100
+		total_profit = Math.floor((total_revenue - total_expense) * 100 + 0.5) / 100
+		total_wastage = Math.floor((total_wastage + Math.max(0, yhat - y)) * 100 + 0.5) / 100
+		
+		predictions.push(yhat)
+		expense.push(new_expense)
+		revenue.push(new_revenue)
+		
+		total_expense_value.innerHTML = "$ " + total_expense.toString()
+		total_revenue_value.innerHTML = "$ " + total_revenue.toString()
+		total_profit_value.innerHTML = "$ " + total_profit.toString()
+		total_wastage_value.innerHTML = total_wastage.toString() + " kg"
+		
+		yhat_input.value = ""
+		
+		next_day = next_day + 1
+		
+		if (max_day < next_day) {
+			stop_game()
+		} else {
+			update_data_points()
+			ask_next()
+		}
+	}
+}
+
+function start_game() {
+	if (! game_on) {
+		game_on = true
+		
+		arrow1.style.visibility = "visible"
+		guiding1.style.visibility = "visible"
+		arrow2.style.visibility = "visible"
+		guiding2.style.visibility = "visible"
+		yhat_input.style.visibility = "visible"
+		input_submit.style.visibility = "visible"
+		
+		ask_next()
+	}
+}
+
+function stop_game() {
+	game_end = true
+	
+	arrow1.style.visibility = "hidden"
+	guiding1.style.visibility = "hidden"
+	arrow2.style.visibility = "hidden"
+	guiding2.style.visibility = "hidden"
+	yhat_input.style.visibility = "hidden"
+	input_submit.style.visibility = "hidden"
+	
+	reset_button.style.visibility = "visible"
+	
+	update_data_points()
+}
+
+function show_instruction() {
+	instruction_on = !instruction_on
+	
+	if (instruction_on) {
+		elements = document.getElementsByClassName("instruction_text")
+		for (let i = 0; i < elements.length; i++) {
+			elements[i].style.visibility = "visible"
+		}
+		
+		element = document.getElementById("instruction_board")
+		element.style.visibility = "visible"
+		
+		element = document.getElementById("instruction_close")
+		element.style.visibility = "visible"
+	} else {
+		elements = document.getElementsByClassName("instruction_text")
+		for (let i = 0; i < elements.length; i++) {
+			elements[i].style.visibility = "hidden"
+		}
+		
+		element = document.getElementById("instruction_board")
+		element.style.visibility = "hidden"
+		
+		element = document.getElementById("instruction_close")
+		element.style.visibility = "hidden"
+	}
 }
 
 makeDraggable(control_point1);
