@@ -89,7 +89,7 @@ var control_point_anchors = {'control_point1': [0, 0], 'control_point2': [axis_x
 
 var canvas_limit = [0, 0, 0, 0] // Top, Bottom, Left, Right
 
-const max_day = 10
+const max_day = 15
 
 var n_initial_data_points = 5
 var data_points = []
