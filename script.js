@@ -112,7 +112,7 @@ var slope = 0
 var intercept = 0
 var isDragging = false
 
-var instruction_on = true
+var instruction_on = false
 var game_on = false
 var game_end = false
 
